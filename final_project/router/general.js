@@ -65,11 +65,16 @@ public_users.get('/review/:isbn',function (req, res) {
     if (!book) {
         return res.status(404).json({ message: "Book not found" });
     }
+
+    if (Object.keys(book.reviews).length === 0) {
+        return res.status(200).json({ message: "No reviews found for this book." });
+    }
+
     res.status(200).json(book.reviews);
 });
 
 // Add / Update book review
-regd_users.put("/auth/review/:isbn", (req, res) => {
+public_users.put("/auth/review/:isbn", (req, res) => {
     const isbn = req.params.isbn;
     const username = req.session.authorization.username;
 
