@@ -44,7 +44,7 @@ public_users.get('/isbn/:isbn', async (req, res) => {
     try {
         const isbn = req.params.isbn;
 
-        // Fetch all books asynchronously
+        // Fetch all books from base endpoint
         const response = await axios.get('http://localhost:5000/');
         const booksData = response.data;
 
@@ -54,7 +54,11 @@ public_users.get('/isbn/:isbn', async (req, res) => {
             return res.status(404).json({ message: "Book not found" });
         }
 
-        res.status(200).json(book);
+
+        res.status(200).json({
+            isbn,
+            ...book
+        });
     } catch (error) {
         res.status(500).json({
             message: "Error fetching book",
@@ -63,22 +67,31 @@ public_users.get('/isbn/:isbn', async (req, res) => {
     }
 });
 
+
   
 // Get book details based on author
-// Get book details based on author using async/await + Axios
 public_users.get('/author/:author', async (req, res) => {
     try {
         const author = req.params.author.toLowerCase();
 
-        // Fetch all books asynchronously
+        // Fetch all books from base endpoint
         const response = await axios.get('http://localhost:5000/');
         const booksData = response.data;
 
-        const result = Object.values(booksData).filter(
-            book => book.author.toLowerCase() === author
-        );
+        // Include ISBN in response
+        const result = Object.entries(booksData)
+            .filter(([isbn, book]) =>
+                book.author.toLowerCase() === author
+            )
+            .map(([isbn, book]) => ({
+                isbn,
+                ...book
+            }));
 
-        res.status(200).json(result);
+        res.status(200).json({
+            count: result.length,
+            books: result
+        });
     } catch (error) {
         res.status(500).json({
             message: "Error fetching books by author",
@@ -88,20 +101,30 @@ public_users.get('/author/:author', async (req, res) => {
 });
 
 
+
 // Get all books based on title using async/await + Axios
 public_users.get('/title/:title', async (req, res) => {
     try {
         const title = req.params.title.toLowerCase();
 
-        // Fetch all books asynchronously
+        // Fetch all books from base endpoint
         const response = await axios.get('http://localhost:5000/');
         const booksData = response.data;
 
-        const result = Object.values(booksData).filter(
-            book => book.title.toLowerCase() === title
-        );
+        // Include ISBN in response
+        const result = Object.entries(booksData)
+            .filter(([isbn, book]) =>
+                book.title.toLowerCase() === title
+            )
+            .map(([isbn, book]) => ({
+                isbn,
+                ...book
+            }));
 
-        res.status(200).json(result);
+        res.status(200).json({
+            count: result.length,
+            books: result
+        });
     } catch (error) {
         res.status(500).json({
             message: "Error fetching books by title",
@@ -109,6 +132,7 @@ public_users.get('/title/:title', async (req, res) => {
         });
     }
 });
+
 
 
 public_users.get("/review/:isbn", (req, res) => {
