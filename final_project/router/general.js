@@ -68,4 +68,31 @@ public_users.get('/review/:isbn',function (req, res) {
     res.status(200).json(book.reviews);
 });
 
+// Add / Update book review
+regd_users.put("/auth/review/:isbn", (req, res) => {
+    const isbn = req.params.isbn;
+    const username = req.session.authorization.username;
+
+    // Get review from query parameter
+    const review = req.query.review;
+
+    if (!review) {
+        return res.status(400).json({ message: "Please provide a review as query parameter" });
+    }
+
+    // Check if book exists
+    if (!books[isbn]) {
+        return res.status(404).json({ message: "Book not found" });
+    }
+
+    // Add or update the review for this user
+    books[isbn].reviews[username] = review;
+
+    return res.status(200).json({
+        message: "Review added/updated successfully",
+        book: books[isbn]
+    });
+});
+
+
 module.exports.general = public_users;
