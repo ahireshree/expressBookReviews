@@ -3,7 +3,7 @@ let books = require("./booksdb.js");
 let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
 const public_users = express.Router();
-
+const axios = require('axios');
 
 public_users.post("/register", (req,res) => {
     const username = req.body.username;
@@ -23,9 +23,20 @@ public_users.post("/register", (req,res) => {
 });
 
 // Get the book list available in the shop
-public_users.get('/',function (req, res) {
-  //Write your code here
-  res.send(JSON.stringify(books,null,4));
+public_users.get('/', async (req, res) => {
+    try {
+        // Simulate async fetching using a Promise
+        const allBooks = await new Promise((resolve, reject) => {
+            if (books) {
+                resolve(Object.values(books));
+            } else {
+                reject("No books found");
+            }
+        });
+        res.status(200).json(allBooks);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching books", error });
+    }
 });
 
 // Get book details based on ISBN
@@ -73,6 +84,16 @@ public_users.get("/review/:isbn", (req, res) => {
 
     return res.status(200).json(book.reviews);
 });
+
+async function fetchAllBooks() {
+    try {
+      const response = await axios.get('http://localhost:5000/books');
+      const allBooks = response.data;
+      console.log("All books available in the shop:", allBooks);
+    } catch (error) {
+      console.error("Error fetching all books:", error.message);
+    }
+  }
 
 
 module.exports.general = public_users;
