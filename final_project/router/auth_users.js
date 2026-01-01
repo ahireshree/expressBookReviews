@@ -51,23 +51,70 @@ regd_users.post("/login", (req,res) => {
  
 });
 
-// Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
-    const isbn = req.params.isbn;
-    const review = req.body.review;
+    const isbn = Number(req.params.isbn);
+
+    // Ensure user is logged in
+    if (!req.session.authorization || !req.session.authorization.username) {
+        return res.status(403).json({ message: "User not logged in" });
+    }
+
     const username = req.session.authorization.username;
+
+    // Get review from body or query
+    const review = req.body.review || req.query.review;
+    if (!review) {
+        return res.status(400).json({ message: "Please provide a review" });
+    }
 
     if (!books[isbn]) {
         return res.status(404).json({ message: "Book not found" });
     }
 
+    // Initialize reviews object if empty
+    if (!books[isbn].reviews) {
+        books[isbn].reviews = {};
+    }
+
+    // Add/update review
     books[isbn].reviews[username] = review;
 
     return res.status(200).json({
-        message: "Review successfully added",
-        book: books[isbn]
-    });  
+        message: "Review successfully added/updated",
+        reviews: books[isbn].reviews
+    });
 });
+
+regd_users.delete("/auth/review/:isbn", (req, res) => {
+    const isbn = Number(req.params.isbn);
+
+    // Ensure user is logged in
+    if (!req.session.authorization || !req.session.authorization.username) {
+        return res.status(403).json({ message: "User not logged in" });
+    }
+
+    const username = req.session.authorization.username;
+
+    // Check if the book exists
+    if (!books[isbn]) {
+        return res.status(404).json({ message: "Book not found" });
+    }
+
+    // Check if the book has reviews
+    if (!books[isbn].reviews || !books[isbn].reviews[username]) {
+        return res.status(404).json({ message: "No review found for this user" });
+    }
+
+    // Delete the user's review
+    delete books[isbn].reviews[username];
+
+    return res.status(200).json({
+        message: "Your review has been deleted successfully",
+        reviews: books[isbn].reviews
+    });
+});
+
+
 
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;
